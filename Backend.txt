@@ -1,0 +1,84 @@
+ProfileUpload.JS
+
+
+//using express 
+const express= require("express");
+//using multer
+const multer = require("multer");
+const fs = require("fs");
+const path = require("path");
+const router = express.Router();
+
+const storage = multer.diskStorage({
+    destination:(req,file,cb)=>{
+    cb(null,"uploads/");
+},
+
+filename:(req,file,cb)=>{
+   cb(null, Date, now() + "_" +file.originalname);
+}
+});
+
+const upload = multer({storage, limits:{ fileSize:5*1024*1024},
+fileFilter:{ req, file, cb)=>{
+if (file.mimetype.startsWith("image/")){
+cb(null, true);
+}else{
+cb(new Error ("Only image files allowed"));
+}
+}
+});
+
+
+// Upload or Update Profile Image
+
+
+router.post("/upload-update-profile"),
+upload.single("image"), async(req,res)=>{
+try{
+const userID = req.body,userID;
+
+if(!req.file){
+return res.status(400).json({message:"No image Uploaded"});
+}
+
+// get user from db 
+const user = await User.findBy(userID); //fetches from the DB connected 
+
+if(!user) return res.status(404).json({message:"User not Found"});
+
+
+
+// Deleting old post 
+if(user.profileImage){
+fs.unlink(user.profileImage, err => {
+if (err) console.log("Old image delete failed");
+});
+}
+
+//Saving new cropped Image path 
+
+user.profileImage= req.file.path;
+await user.save();
+
+res.status(200).json({ message: "Cropped Image uploaded/updated successfully"});
+
+   imagePath: req.file.path
+});
+
+catch(error){
+res.status(500).json({message: "Upload Failed",
+error:error.message});
+}
+});
+
+module.exports= router;
+
+
+//FOR DB User Model
+
+profileImage:{type: String}
+
+
+
+
